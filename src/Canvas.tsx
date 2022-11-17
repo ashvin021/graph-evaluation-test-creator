@@ -30,6 +30,7 @@ export const Canvas = () => {
   const [xScale, setXScale] = useState(DEFAULT_SCALE);
   const [yScale, setYScale] = useState(DEFAULT_SCALE);
   const [resizeCount, setResizeCount] = useState(0);
+  const [downloadCount, setDownloadCount] = useState(1);
 
   var saveableCanvas: any;
 
@@ -63,6 +64,27 @@ export const Canvas = () => {
     </Box>
   );
 
+  const getCurrentTestCase = () =>
+    createTestCase(
+      dataURL,
+      equation,
+      lowestX,
+      highestX,
+      lowestY,
+      highestY,
+      xScale,
+      yScale
+    );
+
+  const downloadAsTextFile = (filename: string, contents: string) => {
+    const element = document.createElement("a");
+    const file = new Blob([contents], { type: "text/plain" });
+    element.href = URL.createObjectURL(file);
+    element.download = filename;
+    document.body.appendChild(element);
+    element.click();
+  };
+
   return (
     <VStack spacing={8}>
       <Wrap>
@@ -75,7 +97,7 @@ export const Canvas = () => {
           key={resizeCount}
           style={{ position: "relative" }}
           brushRadius={1}
-          ref={(canvasDraw: any) => saveableCanvas = canvasDraw}
+          ref={(canvasDraw: any) => (saveableCanvas = canvasDraw)}
           onChange={() => setDataURL(saveableCanvas.getDataURL())}
           lowestX={isNaN(lowestX) ? DEFAULT_LOWER_BOUND : lowestX}
           highestX={isNaN(highestX) ? DEFAULT_UPPER_BOUND : highestX}
@@ -90,25 +112,18 @@ export const Canvas = () => {
         <Button onClick={() => setResizeCount(resizeCount + 1)}>Resize</Button>
         <Button onClick={() => saveableCanvas.eraseAll()}>Erase</Button>
         <Button onClick={() => saveableCanvas.undo()}>Undo</Button>
+        <Button onClick={() => copy(getCurrentTestCase())}>Copy Test</Button>
         <Button
-          onClick={() =>
-            copy(
-              createTestCase(
-                dataURL,
-                equation,
-                lowestX,
-                highestX,
-                lowestY,
-                highestY,
-                xScale,
-                yScale
-              )
-            )
-          }
+          onClick={() => {
+            downloadAsTextFile(
+              `${equation}_test${downloadCount}.txt`,
+              getCurrentTestCase()
+            );
+            setDownloadCount(downloadCount + 1);
+          }}
         >
-          Copy Test
+          Download Test
         </Button>
-        <Button>Download Test</Button>
       </Wrap>
     </VStack>
   );
